@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+#SPDX-FileCopyrightText: 2025 Akari Sunagawa
+#SPDX-License-Indentifier: BSD-3-Clause
+
 import rclpy
 from rclpy.node import Node
 from datetime import datetime
