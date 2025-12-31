@@ -1,0 +1,52 @@
+name: test
+on: push
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.7, 3.8, 3.9, 3.10]
+
+    steps:
+      # 1. リポジトリをチェックアウト
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # 2. ROS 2 Humble をインストール
+      - name: Setup ROS 2 Humble
+        uses: ros-tooling/setup-ros@v0.3
+        with:
+          version: humble
+
+      # 3. 指定 Python バージョンをセットアップ
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # 4. 依存関係のインストール
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y python3-colcon-common-extensions python3-pip
+          pip3 install --upgrade pip
+          pip3 install -r src/mypkg_2/requirements.txt || true
+
+      # 5. ROS 2 ワークスペースのビルド
+      - name: Build workspace
+        run: |
+          source /opt/ros/humble/setup.bash
+          colcon build --symlink-install
+
+      # 6. テストの実行
+      - name: Run tests
+        run: |
+          source install/setup.bash
+          # Bash スクリプトがある場合は実行
+          if [ -f src/mypkg_2/test/test.bash ]; then
+            chmod +x src/mypkg_2/test/test.bash
+            ./src/mypkg_2/test/test.bash
+          fi
+          # Python テスト
+          colcon test --pytest-args
+          colcon test-result --verbose
